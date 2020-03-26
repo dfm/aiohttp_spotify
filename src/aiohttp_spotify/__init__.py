@@ -1,8 +1,8 @@
 __all__ = ["__version__", "spotify_app", "SpotifyAuth", "SpotifyClient"]
 
-from .app import spotify_app
-from .api import SpotifyAuth, SpotifyClient
 from .aiohttp_spotify_version import __version__
+from .api import SpotifyAuth, SpotifyClient
+from .app import spotify_app
 
 __uri__ = "https://github.com/dfm/aiohttp_spotify"
 __author__ = "Daniel Foreman-Mackey"

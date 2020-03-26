@@ -1,7 +1,7 @@
-import time
-from typing import NamedTuple, Tuple, Mapping
-
 import asyncio
+import time
+from typing import Mapping, NamedTuple, Tuple
+
 from aiohttp import ClientSession
 
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"

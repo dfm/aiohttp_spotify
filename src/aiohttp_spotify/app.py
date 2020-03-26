@@ -1,11 +1,12 @@
 __all__ = ["spotify_app"]
 
-from typing import Optional, Iterable, Callable
+
+from typing import Callable, Iterable, Optional
 
 from aiohttp import web
 
-from .views import routes
 from .api import SpotifyAuth
+from .views import routes
 
 
 def spotify_app(

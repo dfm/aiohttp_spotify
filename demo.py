@@ -1,12 +1,12 @@
 import argparse
 import base64
 from functools import wraps
-from typing import Callable, Awaitable, AsyncIterator
+from typing import AsyncIterator, Awaitable, Callable
 
 import aiohttp_session
-from cryptography import fernet
-from aiohttp import web, ClientSession
+from aiohttp import ClientSession, web
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
+from cryptography import fernet
 
 import aiohttp_spotify
 from aiohttp_spotify import SpotifyAuth, SpotifyClient

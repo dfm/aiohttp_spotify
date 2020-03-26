@@ -1,12 +1,12 @@
 __all__ = ["routes"]
 
-import secrets
 import logging
+import secrets
 import time
-from typing import Optional, Union, Any, MutableMapping
+from typing import Any, MutableMapping, Optional, Union
 
 import yarl
-from aiohttp import web, ClientSession
+from aiohttp import ClientSession, web
 
 from . import api
 
