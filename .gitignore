@@ -1,1 +1,4 @@
 environment.*
+aiohttp_spotify_version.py
+build
+dist
