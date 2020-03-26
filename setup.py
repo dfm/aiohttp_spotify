@@ -22,10 +22,7 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-INSTALL_REQUIRES = [
-    "aiohttp",
-    "aiohttp_session[secure]",
-]
+INSTALL_REQUIRES = ["aiohttp"]
 
 # END PROJECT SPECIFIC
 

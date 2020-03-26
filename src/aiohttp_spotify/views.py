@@ -2,10 +2,8 @@ __all__ = ["routes"]
 
 import logging
 import secrets
-import time
 from typing import Any, MutableMapping, Optional, Union
 
-import yarl
 from aiohttp import ClientSession, web
 
 from . import api
@@ -36,13 +34,6 @@ async def get_session(
     return session
 
 
-def get_redirect_uri(request: web.Request) -> str:
-    """Get the redirect URI that the Spotify API expects"""
-    return str(
-        request.url.with_path(str(request.app.router["callback"].url_for()))
-    )
-
-
 @routes.get("/auth", name="auth")
 async def auth(request: web.Request) -> web.Response:
     session = await get_session(request)
@@ -52,17 +43,8 @@ async def auth(request: web.Request) -> web.Response:
     state = secrets.token_urlsafe()
     session["spotify_state"] = state
 
-    # Construct the API OAuth2 URL
-    args = dict(
-        client_id=request.app["spotify_client_id"],
-        response_type="code",
-        redirect_uri=get_redirect_uri(request),
-        state=state,
-    )
-    scope = request.app.get("spotify_scope")
-    if scope is not None:
-        args["scope"] = scope
-    location = yarl.URL(api.SPOTIFY_AUTH_URL).with_query(**args)
+    # Construct the redirect URL
+    location = request.app["spotify_client"].get_oauth_url(state=state)
 
     return web.HTTPTemporaryRedirect(location=str(location))
 
@@ -87,26 +69,8 @@ async def callback(request: web.Request) -> web.Response:
         return await handle_error(request)
 
     # Construct the request to get the tokens
-    headers = {"Accept": "application/json"}
-    data = dict(
-        client_id=request.app.get("spotify_client_id"),
-        client_secret=request.app.get("spotify_client_secret"),
-        redirect_uri=get_redirect_uri(request),
-        grant_type="authorization_code",
-        code=request.query["code"],
-    )
     async with ClientSession(raise_for_status=True) as client:
-        async with client.post(
-            api.SPOTIFY_TOKEN_URL, headers=headers, data=data
-        ) as response:
-            user_data = await response.json()
-
-    # Expires *at* is more useful than *in* for us...
-    auth = api.SpotifyAuth(
-        access_token=user_data["access_token"],
-        refresh_token=user_data["refresh_token"],
-        expires_at=int(time.time()) + int(user_data["expires_in"]),
-    )
+        auth = await request.app["spotify_client"].get_auth(client, code)
 
     return await handle_success(request, auth)
 

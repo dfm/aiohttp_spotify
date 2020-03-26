@@ -9,7 +9,7 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import aiohttp_spotify
-from aiohttp_spotify import SpotifyAuth, SpotifyClient, SpotifyResponse
+from aiohttp_spotify import SpotifyAuth
 
 
 async def client_session(app: web.Application) -> AsyncIterator[None]:
@@ -22,6 +22,7 @@ def parse_config() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--client_id", required=True)
     parser.add_argument("--client_secret", required=True)
+    parser.add_argument("--redirect_uri", required=True)
     parser.add_argument("-p", "--port", type=int, default=5000)
     return parser.parse_args()
 
@@ -51,12 +52,14 @@ async def index(request: web.Request) -> web.Response:
 
 @require_auth
 async def me(request: web.Request, auth: SpotifyAuth) -> web.Response:
-    response = await request.app["spotify_client"].request(
+    response = await request.app["spotify_app"]["spotify_client"].request(
         request.app["client_session"], auth, "/me"
     )
+
     # Don't forget to update the authorization!
     if response.auth_changed:
         await update_auth(request, response.auth)
+
     return web.json_response(response.json())
 
 
@@ -65,7 +68,9 @@ async def update_auth(request: web.Request, auth: aiohttp_spotify.SpotifyAuth):
     session["spotify_auth"] = auth
 
 
-def app_factory(client_id: str, client_secret: str) -> web.Application:
+def app_factory(
+    client_id: str, client_secret: str, redirect_uri: str
+) -> web.Application:
     app = web.Application()
 
     app.router.add_get("/", index, name="index")
@@ -74,6 +79,7 @@ def app_factory(client_id: str, client_secret: str) -> web.Application:
     app["spotify_app"] = aiohttp_spotify.spotify_app(
         client_id=client_id,
         client_secret=client_secret,
+        redirect_uri=redirect_uri,
         handle_auth=update_auth,
         default_redirect=app.router["index"].url_for(),
     )
@@ -85,15 +91,14 @@ def app_factory(client_id: str, client_secret: str) -> web.Application:
 
     app.cleanup_ctx.append(client_session)
 
-    app["spotify_client"] = SpotifyClient(
-        client_id=client_id, client_secret=client_secret
-    )
-
     return app
 
 
 if __name__ == "__main__":
     config = parse_config()
     web.run_app(
-        app_factory(config.client_id, config.client_secret), port=config.port
+        app_factory(
+            config.client_id, config.client_secret, config.redirect_uri
+        ),
+        port=config.port,
     )
