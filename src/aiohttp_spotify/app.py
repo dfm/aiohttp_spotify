@@ -1,14 +1,11 @@
 __all__ = ["spotify_app"]
 
-import base64
-from typing import Optional, Iterable, Callable, Dict, Any
+from typing import Optional, Iterable, Callable
 
-import aiohttp_session
-from aiohttp_session.cookie_storage import EncryptedCookieStorage
-from cryptography import fernet
 from aiohttp import web
 
 from .views import routes
+from .api import SpotifyAuth
 
 
 def spotify_app(
@@ -16,11 +13,12 @@ def spotify_app(
     client_id: str,
     client_secret: str,
     scope: Iterable[str] = None,
+    default_redirect: Optional[str] = None,
+    handle_auth: Optional[Callable[[web.Request, SpotifyAuth], None]] = None,
     on_success: Optional[
-        Callable[[web.Request, Dict[str, Any]], web.Response]
+        Callable[[web.Request, SpotifyAuth], web.Response]
     ] = None,
     on_error: Optional[Callable[[web.Request, str], web.Response]] = None,
-    cookie_name: str = "AIOHTTP_SPOTIFY_SESSION",
 ) -> web.Application:
     app = web.Application()
 
@@ -28,14 +26,10 @@ def spotify_app(
     app["spotify_client_id"] = client_id
     app["spotify_client_secret"] = client_secret
     app["spotify_scope"] = None if scope is None else " ".join(scope)
+    app["spotify_default_redirect"] = default_redirect
+    app["spotify_handle_auth"] = handle_auth
     app["spotify_on_success"] = on_success
     app["spotify_on_error"] = on_error
-
-    # Set up the session
-    secret_key = base64.urlsafe_b64decode(fernet.Fernet.generate_key())
-    aiohttp_session.setup(
-        app, EncryptedCookieStorage(secret_key, cookie_name=cookie_name),
-    )
 
     # Add the views
     app.add_routes(routes)
