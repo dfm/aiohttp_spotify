@@ -26,7 +26,6 @@ class SpotifyResponse(NamedTuple):
     body: bytes
 
     def json(self) -> Mapping[str, Any]:
-        print(self.body)
         return json.loads(self.body)
 
 
