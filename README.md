@@ -11,6 +11,8 @@ To install, use pip:
 python -m pip install aiohttp_spotify
 ```
 
+It's best if you also install and use [aiohttp-session](https://github.com/aio-libs/aiohttp-session).
+
 Usage
 -----
 
@@ -53,3 +55,5 @@ async def call_api(request: web.Request) -> web.Response:
 ```
 
 where `auth` is the `SpotifyAuth` object from above.
+
+Take a look at [the demo directory](/demo) for a more complete example.
