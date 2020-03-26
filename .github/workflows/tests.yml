@@ -5,30 +5,30 @@ name: Python application
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install .
-    - name: Lint with black
-      run: |
-        python -m pip install black
-        black --check src
-    - name: Test with pytest
-      run: |
-        python -m pip install pytest pytest-aiohttp
-        python -m pytest -vs tests
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+      - name: Lint with black and mypy
+        run: |
+          python -m pip install black mypy
+          black --check src
+          mypy --ignore-missing-imports src
+      - name: Test with pytest
+        run: |
+          python -m pip install pytest pytest-aiohttp
+          python -m pytest -vs tests

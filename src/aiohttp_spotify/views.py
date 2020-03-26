@@ -12,19 +12,21 @@ logger = logging.getLogger("aiohttp_spotify")
 
 try:
     import aiohttp_session
+    from aiohttp_session import Session
 except ImportError:
     logger.warn(
         "The OAuth flow for the Spotify API will be more secure if "
         "aiohttp_session is installed"
     )
     aiohttp_session = None
+    Session = MutableMapping[str, Any]
 
 routes = web.RouteTableDef()
 
 
 async def get_session(
     request: web.Request,
-) -> Union[MutableMapping[str, Any], aiohttp_session.Session]:
+) -> Union[MutableMapping[str, Any], Session]:
     if aiohttp_session is None:
         return {}
     try:
