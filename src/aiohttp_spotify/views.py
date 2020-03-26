@@ -136,10 +136,10 @@ async def handle_success(
         return await handler(request, auth)
 
     session = await get_session(request)
-    target_url = session.get(
-        "spotify_target_url", request.app["spotify_default_redirect"]
-    )
+    target_url = session.get("spotify_target_url")
     if target_url is None:
-        return web.Response(body="authorized")
+        target_url = request.app["spotify_default_redirect"]
+        if target_url is None:
+            return web.Response(body="authorized")
 
     return web.HTTPTemporaryRedirect(location=target_url)

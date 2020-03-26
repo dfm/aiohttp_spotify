@@ -1,6 +1,5 @@
 __all__ = ["spotify_app"]
 
-
 from typing import Callable, Iterable, Optional
 
 from aiohttp import web

@@ -9,7 +9,7 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import aiohttp_spotify
-from aiohttp_spotify import SpotifyAuth, SpotifyClient
+from aiohttp_spotify import SpotifyAuth, SpotifyClient, SpotifyResponse
 
 
 async def client_session(app: web.Application) -> AsyncIterator[None]:
@@ -51,10 +51,13 @@ async def index(request: web.Request) -> web.Response:
 
 @require_auth
 async def me(request: web.Request, auth: SpotifyAuth) -> web.Response:
-    auth, status, headers, content = await request.app[
-        "spotify_client"
-    ].request(request.app["client_session"], auth, "/me", parse_json=True)
-    return web.json_response(content)
+    response = await request.app["spotify_client"].request(
+        request.app["client_session"], auth, "/me"
+    )
+    # Don't forget to update the authorization!
+    if response.auth_changed:
+        await update_auth(request, response.auth)
+    return web.json_response(response.json())
 
 
 async def update_auth(request: web.Request, auth: aiohttp_spotify.SpotifyAuth):
@@ -72,6 +75,7 @@ def app_factory(client_id: str, client_secret: str) -> web.Application:
         client_id=client_id,
         client_secret=client_secret,
         handle_auth=update_auth,
+        default_redirect=app.router["index"].url_for(),
     )
     app.add_subapp("/spotify", app["spotify_app"])
 

@@ -1,6 +1,9 @@
+__all__ = ["SpotifyAuth", "SpotifyClient"]
+
 import asyncio
+import json
 import time
-from typing import Mapping, NamedTuple, Tuple
+from typing import Any, Mapping, NamedTuple, Tuple
 
 from aiohttp import ClientSession
 
@@ -13,6 +16,18 @@ class SpotifyAuth(NamedTuple):
     access_token: str
     refresh_token: str
     expires_at: int
+
+
+class SpotifyResponse(NamedTuple):
+    auth_changed: bool
+    auth: SpotifyAuth
+    status: int
+    headers: Mapping[str, str]
+    body: bytes
+
+    def json(self) -> Mapping[str, Any]:
+        print(self.body)
+        return json.loads(self.body)
 
 
 class SpotifyClient:
@@ -46,11 +61,12 @@ class SpotifyClient:
         endpoint: str,
         *,
         method: str = "GET",
-        parse_json: bool = False,
         **payload,
-    ) -> Tuple[SpotifyAuth, int, Mapping[str, str], bytes]:
+    ) -> SpotifyResponse:
         # Update the access token if it is to expire soon
+        auth_changed = False
         if auth.expires_at - time.time() <= 60:
+            auth_changed = True
             auth = await self.update_auth(session, auth)
 
         headers = {
@@ -64,23 +80,13 @@ class SpotifyClient:
                 # We got rate limited!
                 await asyncio.sleep(int(response.headers["Retry-After"]))
                 return await self.request(
-                    session,
-                    auth,
-                    endpoint,
-                    method=method,
-                    parse_json=parse_json,
-                    **payload,
+                    session, auth, endpoint, method=method, **payload
                 )
 
-            if parse_json:
-                return (
-                    auth,
-                    response.status,
-                    response.headers,
-                    await response.json(),
-                )
+            response.raise_for_status()
 
-            return (
+            return SpotifyResponse(
+                auth_changed,
                 auth,
                 response.status,
                 response.headers,
