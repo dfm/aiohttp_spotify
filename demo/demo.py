@@ -52,9 +52,7 @@ async def me(request: web.Request, auth: SpotifyAuth) -> web.Response:
     return web.json_response(response.json())
 
 
-async def update_auth(
-    request: web.Request, auth: aiohttp_spotify.SpotifyAuth
-) -> None:
+async def update_auth(request: web.Request, auth: SpotifyAuth) -> None:
     """Handle updating the stored authorization information"""
     session = await aiohttp_session.get_session(request)
     session["spotify_auth"] = auth

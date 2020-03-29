@@ -191,7 +191,7 @@ class SpotifyClient:
             "Authorization": f"Bearer {auth.access_token}",
         }
         async with session.request(
-            method, self.api_url + endpoint, headers=headers, data=payload
+            method, self.api_url + endpoint, headers=headers, **payload
         ) as response:
             if response.status == 429:
                 # We got rate limited!
