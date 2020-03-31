@@ -148,7 +148,7 @@ class SpotifyClient:
             grant_type="refresh_token",
             refresh_token=auth.refresh_token,
         )
-        async with session.post(self.token_url, json=data) as response:
+        async with session.post(self.token_url, data=data) as response:
             response.raise_for_status()
             user_data = await response.json()
         return SpotifyAuth(
